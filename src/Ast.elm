@@ -83,7 +83,7 @@ view ast =
                         Html.text "-"
 
                     Not ->
-                        Html.text "!"
+                        Html.text "Not "
                 , view expression
                 ]
 

@@ -108,7 +108,7 @@ unaryParser =
         unaryOperatorParser : Parser UnaryOperator
         unaryOperatorParser =
             Parser.oneOf
-                [ Parser.map (\_ -> Not) (Parser.symbol "!")
+                [ Parser.map (\_ -> Not) (Parser.keyword "Not")
                 , Parser.map (\_ -> Negative) (Parser.symbol "-")
                 ]
     in
