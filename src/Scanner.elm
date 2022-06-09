@@ -1,6 +1,7 @@
 module Scanner exposing (..)
 
 import Ast exposing (..)
+import Html exposing (Html)
 import Parser exposing ((|.), (|=), Parser, Step(..))
 import Source exposing (Source)
 
@@ -150,3 +151,13 @@ primaryParser =
 scan : Source -> Scanned
 scan source =
     Parser.run parser (Source.raw source)
+
+
+view : Scanned -> Html msg
+view scanned =
+    case scanned of
+        Ok ast ->
+            Ast.view ast
+
+        Err errors ->
+            Html.text "oh no"

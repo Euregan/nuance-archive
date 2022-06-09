@@ -51,4 +51,10 @@ view model =
             [ button [ onClick Scan ] [ text "Scan" ]
             , button [ onClick Run ] [ text "Run" ]
             ]
+        , case model.ast of
+            Nothing ->
+                text ""
+
+            Just scanned ->
+                Scanner.view scanned
         ]
