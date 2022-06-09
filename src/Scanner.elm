@@ -24,6 +24,7 @@ binaryParser childParser operatorParser constructor =
                     |= operatorParser
                     |. Parser.spaces
                     |= childParser
+                    |. Parser.spaces
                 , Parser.succeed (Done (List.reverse children))
                 ]
 
