@@ -3,6 +3,7 @@ module Main exposing (..)
 import Browser
 import Html exposing (Html, button, div, text)
 import Html.Events exposing (onClick)
+import Interpreter exposing (Result(..))
 import Scanner exposing (Scanned)
 import Source exposing (Source)
 
@@ -14,6 +15,7 @@ main =
 type alias Model =
     { source : Source
     , ast : Maybe Scanned
+    , result : Maybe Result
     }
 
 
@@ -21,6 +23,7 @@ init : Model
 init =
     { source = Source.init "(2 + 3) * 4"
     , ast = Nothing
+    , result = Nothing
     }
 
 
@@ -37,10 +40,16 @@ update msg model =
             { model | source = source }
 
         Scan ->
-            { model | ast = Just <| Scanner.scan model.source }
+            { model
+                | ast = Just <| Scanner.scan model.source
+                , result = Nothing
+            }
 
         Run ->
-            { model | ast = Just <| Scanner.scan model.source }
+            { model
+                | ast = Just <| Scanner.scan model.source
+                , result = Result.toMaybe <| Result.map Interpreter.run <| Scanner.scan model.source
+            }
 
 
 view : Model -> Html Msg
@@ -57,4 +66,10 @@ view model =
 
             Just scanned ->
                 Scanner.view scanned
+        , case model.result of
+            Nothing ->
+                text ""
+
+            Just result ->
+                Interpreter.view result
         ]
