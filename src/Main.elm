@@ -4,7 +4,6 @@ import Browser
 import Html exposing (Html, button, div, text)
 import Html.Events exposing (onClick)
 import Scanner exposing (Scanned)
-import Scanner.Token exposing (Token)
 import Source exposing (Source)
 
 
@@ -14,14 +13,14 @@ main =
 
 type alias Model =
     { source : Source
-    , tokens : Maybe Scanned
+    , ast : Maybe Scanned
     }
 
 
 init : Model
 init =
     { source = Source.init "(2 + 3) * 4"
-    , tokens = Nothing
+    , ast = Nothing
     }
 
 
@@ -38,16 +37,18 @@ update msg model =
             { model | source = source }
 
         Scan ->
-            { model | tokens = Just <| Scanner.scan model.source }
+            { model | ast = Just <| Scanner.scan model.source }
 
         Run ->
-            { model | tokens = Just <| Scanner.scan model.source }
+            { model | ast = Just <| Scanner.scan model.source }
 
 
 view : Model -> Html Msg
 view model =
     div []
         [ Source.view SourceChanged model.source
-        , button [ onClick Scan ] [ text "Scan" ]
-        , button [ onClick Run ] [ text "Run" ]
+        , div []
+            [ button [ onClick Scan ] [ text "Scan" ]
+            , button [ onClick Run ] [ text "Run" ]
+            ]
         ]
