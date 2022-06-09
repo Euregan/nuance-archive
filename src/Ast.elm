@@ -5,69 +5,29 @@ type alias Ast =
     Expression
 
 
-type alias Expression =
-    Equality
+type Expression
+    = Binary Expression BinaryOperator Expression
+    | Unary UnaryOperator Expression
+    | Number Float
+    | String String
+    | True
+    | False
+    | Expression Expression
 
 
-type alias Equality =
-    { comparison : Comparison
-    , chain : List ( EqualityOperator, Comparison )
-    }
-
-
-type EqualityOperator
+type BinaryOperator
     = Different
     | Equal
-
-
-type alias Comparison =
-    { term : Term
-    , chain : List ( ComparisonOperator, Term )
-    }
-
-
-type ComparisonOperator
-    = GreaterThan
+    | GreaterThan
     | GreaterOrEqual
     | LessThan
     | LessOrEqual
-
-
-type alias Term =
-    { factor : Factor
-    , chain : List ( TermOperator, Factor )
-    }
-
-
-type TermOperator
-    = Minus
+    | Minus
     | Plus
-
-
-type alias Factor =
-    { unary : Unary
-    , chain : List ( FactorOperator, Unary )
-    }
-
-
-type FactorOperator
-    = Multiply
+    | Multiply
     | Divide
-
-
-type Unary
-    = Unary ( UnaryOperator, Unary )
-    | UnaryPrimary Primary
 
 
 type UnaryOperator
     = Not
     | Negative
-
-
-type Primary
-    = Number Float
-    | String String
-    | True
-    | False
-    | Expression Expression

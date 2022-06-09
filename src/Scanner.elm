@@ -13,10 +13,10 @@ type alias Scanned =
     Result (List Parser.DeadEnd) Ast
 
 
-recursiveParser : Parser c -> Parser o -> (c -> List ( o, c ) -> p) -> Parser p
-recursiveParser childParser operatorParser constructor =
+binaryParser : Parser Expression -> Parser BinaryOperator -> (Expression -> BinaryOperator -> Expression -> Expression) -> Parser Expression
+binaryParser childParser operatorParser constructor =
     let
-        subParser : List ( o, c ) -> Parser (Step (List ( o, c )) (List ( o, c )))
+        subParser : List ( BinaryOperator, Expression ) -> Parser (Step (List ( BinaryOperator, Expression )) (List ( BinaryOperator, Expression )))
         subParser children =
             Parser.oneOf
                 [ Parser.succeed (\operator child -> Loop (( operator, child ) :: children))
@@ -25,8 +25,17 @@ recursiveParser childParser operatorParser constructor =
                     |= childParser
                 , Parser.succeed (Done (List.reverse children))
                 ]
+
+        flatten : Expression -> List ( BinaryOperator, Expression ) -> Expression
+        flatten child list =
+            case list of
+                [] ->
+                    child
+
+                ( operator, nextChild ) :: tail ->
+                    constructor child operator (flatten nextChild tail)
     in
-    Parser.succeed constructor
+    Parser.succeed flatten
         |= childParser
         |. Parser.spaces
         |= Parser.loop [] subParser
@@ -42,21 +51,21 @@ expressionParser =
     equalityParser
 
 
-equalityParser : Parser Equality
+equalityParser : Parser Expression
 equalityParser =
-    recursiveParser
+    binaryParser
         comparisonParser
         (Parser.oneOf
             [ Parser.map (\_ -> Different) (Parser.symbol "!=")
             , Parser.map (\_ -> Equal) (Parser.symbol "==")
             ]
         )
-        Equality
+        Binary
 
 
-comparisonParser : Parser Comparison
+comparisonParser : Parser Expression
 comparisonParser =
-    recursiveParser
+    binaryParser
         termParser
         (Parser.oneOf
             [ Parser.map (\_ -> GreaterThan) (Parser.symbol ">")
@@ -65,34 +74,34 @@ comparisonParser =
             , Parser.map (\_ -> LessOrEqual) (Parser.symbol "<=")
             ]
         )
-        Comparison
+        Binary
 
 
-termParser : Parser Term
+termParser : Parser Expression
 termParser =
-    recursiveParser
+    binaryParser
         factorParser
         (Parser.oneOf
             [ Parser.map (\_ -> Minus) (Parser.symbol "-")
             , Parser.map (\_ -> Plus) (Parser.symbol "+")
             ]
         )
-        Term
+        Binary
 
 
-factorParser : Parser Factor
+factorParser : Parser Expression
 factorParser =
-    recursiveParser
+    binaryParser
         unaryParser
         (Parser.oneOf
             [ Parser.map (\_ -> Multiply) (Parser.symbol "*")
             , Parser.map (\_ -> Divide) (Parser.symbol "/")
             ]
         )
-        Factor
+        Binary
 
 
-unaryParser : Parser Unary
+unaryParser : Parser Expression
 unaryParser =
     let
         unaryOperatorParser : Parser UnaryOperator
@@ -103,14 +112,14 @@ unaryParser =
                 ]
     in
     Parser.oneOf
-        [ Parser.succeed (\operator unary -> Unary ( operator, unary ))
+        [ Parser.succeed Unary
             |= unaryOperatorParser
             |= Parser.lazy (\_ -> unaryParser)
-        , Parser.map (\primary -> UnaryPrimary primary) primaryParser
+        , primaryParser
         ]
 
 
-primaryParser : Parser Primary
+primaryParser : Parser Expression
 primaryParser =
     let
         stringParser : Parser String.String
