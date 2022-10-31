@@ -21,6 +21,7 @@ import type {
   RecordExpression,
   Literal,
   LiteralRecord,
+  NuanceRecord,
 } from "./ast";
 
 export const interpret = (ast: Expression): Literal => {
@@ -44,7 +45,7 @@ const interpretNumber = (expression: NumberExpression): number => {
         return -interpretNumber(expression.expression);
     }
   } else if (isNumberRecordAccess(expression)) {
-    return interpretNumber(expression.record[expression.key]);
+    return interpretNumber(expression.record.expression[expression.key]);
   } else {
     switch (expression.operator) {
       case "-":
@@ -71,7 +72,7 @@ const interpretString = (expression: StringExpression): string => {
   if (isString(expression)) {
     return expression;
   } else if (isStringRecordAccess(expression)) {
-    return interpretString(expression.record[expression.key]);
+    return interpretString(expression.record.expression[expression.key]);
   } else {
     switch (expression.operator) {
       case "+":
@@ -129,7 +130,7 @@ const interpretBoolean = (expression: BooleanExpression): boolean => {
         );
     }
   } else if (isBooleanRecordAccess(expression)) {
-    return interpretBoolean(expression.record[expression.key]);
+    return interpretBoolean(expression.record.expression[expression.key]);
   } else {
     switch (expression.operator) {
       case "&&":
@@ -146,7 +147,9 @@ const interpretBoolean = (expression: BooleanExpression): boolean => {
   }
 };
 
-const interpretRecord = (expression: RecordExpression): Literal => {
+const interpretRecord = <R extends NuanceRecord = NuanceRecord>(
+  expression: RecordExpression<R>
+): Literal => {
   const record: LiteralRecord = {};
 
   Object.entries(expression.expression).forEach(([key, value]) => {

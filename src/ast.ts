@@ -2,7 +2,7 @@ export type Expression =
   | NumberExpression
   | StringExpression
   | BooleanExpression
-  | RecordExpression;
+  | RecordExpression<NuanceRecord>;
 
 export type Literal = number | string | boolean | LiteralRecord;
 
@@ -31,10 +31,11 @@ export type NumberOperator = "+" | "-" | "*" | "/";
 
 export interface NumberRecordAccess<
   K extends string = string,
-  O = Record<K, NumberExpression> & Record<Exclude<string, K>, Expression>
+  O extends NuanceRecord = Record<K, NumberExpression> &
+    Record<Exclude<string, K>, Expression>
 > {
   type: "number-record-access";
-  record: O;
+  record: RecordExpression<O>;
   key: K;
 }
 
@@ -53,10 +54,11 @@ export type StringOperator = "+";
 
 export interface StringRecordAccess<
   K extends string = string,
-  O = Record<K, StringExpression> & Record<Exclude<string, K>, Expression>
+  O extends NuanceRecord = Record<K, StringExpression> &
+    Record<Exclude<string, K>, Expression>
 > {
   type: "string-record-access";
-  record: O;
+  record: RecordExpression<O>;
   key: K;
 }
 
@@ -103,10 +105,11 @@ export type BooleanBooleanOperator = "&&" | "||";
 
 export interface BooleanRecordAccess<
   K extends string = string,
-  O = Record<K, BooleanExpression> & Record<Exclude<string, K>, Expression>
+  O extends NuanceRecord = Record<K, BooleanExpression> &
+    Record<Exclude<string, K>, Expression>
 > {
   type: "boolean-record-access";
-  record: O;
+  record: RecordExpression<O>;
   key: K;
 }
 
@@ -116,11 +119,11 @@ export type LiteralRecord = { [key: string]: Literal };
 
 export type NuanceRecord = { [key: string]: Expression };
 
-export type RecordExpression = RecordLiteral;
+export type RecordExpression<R extends NuanceRecord> = RecordLiteral<R>;
 
-export interface RecordLiteral {
+export interface RecordLiteral<R extends NuanceRecord = NuanceRecord> {
   type: "record-literal";
-  expression: NuanceRecord;
+  expression: R;
 }
 
 // Checkers
@@ -131,11 +134,6 @@ export const isLiteral = (
   expression: Expression
 ): expression is number | string | boolean =>
   ["number", "string", "boolean"].includes(typeof expression);
-
-export const isUnary = (
-  expression: Expression
-): expression is NumberUnary | BooleanUnary =>
-  !isLiteral(expression) && expression.type.endsWith("unary");
 
 // Number
 

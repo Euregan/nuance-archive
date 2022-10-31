@@ -1,6 +1,11 @@
 import { describe, it, expect } from "vitest";
 import { interpret } from "./interpreter";
-import type { Expression, NumberRecordAccess } from "./ast";
+import type {
+  Expression,
+  NumberRecordAccess,
+  StringRecordAccess,
+  BooleanRecordAccess,
+} from "./ast";
 
 describe.concurrent("numbers", () => {
   it.concurrent("works for a number literal", () => {
@@ -37,9 +42,12 @@ describe.concurrent("numbers", () => {
       type: "number-record-access",
       key: "number",
       record: {
-        number: 42,
-        string: "hello world",
-        boolean: true,
+        type: "record-literal",
+        expression: {
+          number: 42,
+          string: "hello world",
+          boolean: true,
+        },
       },
     };
     expect(interpret(ast as Expression)).toBe(42);
@@ -60,6 +68,22 @@ describe.concurrent("strings", () => {
         right: "world",
       })
     ).toBe("hello world");
+  });
+
+  it.concurrent("works when accessing a record's string", () => {
+    const ast: StringRecordAccess<"string"> = {
+      type: "string-record-access",
+      key: "string",
+      record: {
+        type: "record-literal",
+        expression: {
+          number: 42,
+          string: "hello world",
+          boolean: true,
+        },
+      },
+    };
+    expect(interpret(ast as Expression)).toBe("hello world");
   });
 });
 
@@ -252,6 +276,22 @@ describe.concurrent("booleans", () => {
         right: true,
       })
     ).toBe(true);
+  });
+
+  it.concurrent("works when accessing a record's boolean", () => {
+    const ast: BooleanRecordAccess<"boolean"> = {
+      type: "boolean-record-access",
+      key: "boolean",
+      record: {
+        type: "record-literal",
+        expression: {
+          number: 42,
+          string: "hello world",
+          boolean: true,
+        },
+      },
+    };
+    expect(interpret(ast as Expression)).toBe(true);
   });
 });
 
