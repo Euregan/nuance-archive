@@ -1,17 +1,15 @@
 {
   "name": "nuance",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "main": "index.js",
-  "author": "Valentin Manceaux-Panot <va.mcxp@gmail.com>",
+  "author": "Valentin Manceaux-Panot <valentin@mcxp.io>",
   "license": "MIT",
   "scripts": {
-    "dev": "parcel src/index.html"
-  },
-  "dependencies": {
-    "elm": "^0.19.1-5"
+    "test": "vitest"
   },
   "devDependencies": {
-    "@parcel/transformer-elm": "2.6.0",
-    "parcel": "^2.6.0"
+    "@types/node": "^18.11.7",
+    "typescript": "^4.8.4",
+    "vitest": "^0.24.4"
   }
 }
