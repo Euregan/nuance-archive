@@ -2,29 +2,36 @@ import {
   isNumberExpression,
   isNumber,
   isNumberUnary,
+  isNumberRecordAccess,
   isStringExpression,
   isString,
+  isStringRecordAccess,
+  isBooleanExpression,
   isBoolean,
   isBooleanUnary,
   isBooleanNumberBinary,
-  isBooleanStringrBinary,
+  isBooleanStringBinary,
+  isBooleanRecordAccess,
 } from "./ast";
 import type {
   Expression,
   NumberExpression,
   StringExpression,
   BooleanExpression,
+  RecordExpression,
+  Literal,
+  LiteralRecord,
 } from "./ast";
 
-export const interpret = (
-  expression: Expression
-): number | string | boolean => {
-  if (isNumberExpression(expression)) {
-    return interpretNumber(expression);
-  } else if (isStringExpression(expression)) {
-    return interpretString(expression);
+export const interpret = (ast: Expression): Literal => {
+  if (isNumberExpression(ast)) {
+    return interpretNumber(ast);
+  } else if (isStringExpression(ast)) {
+    return interpretString(ast);
+  } else if (isBooleanExpression(ast)) {
+    return interpretBoolean(ast);
   } else {
-    return interpretBoolean(expression);
+    return interpretRecord(ast);
   }
 };
 
@@ -36,6 +43,8 @@ const interpretNumber = (expression: NumberExpression): number => {
       case "-":
         return -interpretNumber(expression.expression);
     }
+  } else if (isNumberRecordAccess(expression)) {
+    return interpretNumber(expression.record[expression.key]);
   } else {
     switch (expression.operator) {
       case "-":
@@ -61,6 +70,8 @@ const interpretNumber = (expression: NumberExpression): number => {
 const interpretString = (expression: StringExpression): string => {
   if (isString(expression)) {
     return expression;
+  } else if (isStringRecordAccess(expression)) {
+    return interpretString(expression.record[expression.key]);
   } else {
     switch (expression.operator) {
       case "+":
@@ -106,7 +117,7 @@ const interpretBoolean = (expression: BooleanExpression): boolean => {
           interpretNumber(expression.left) >= interpretNumber(expression.right)
         );
     }
-  } else if (isBooleanStringrBinary(expression)) {
+  } else if (isBooleanStringBinary(expression)) {
     switch (expression.operator) {
       case "==":
         return (
@@ -117,6 +128,8 @@ const interpretBoolean = (expression: BooleanExpression): boolean => {
           interpretString(expression.left) !== interpretString(expression.right)
         );
     }
+  } else if (isBooleanRecordAccess(expression)) {
+    return interpretBoolean(expression.record[expression.key]);
   } else {
     switch (expression.operator) {
       case "&&":
@@ -131,4 +144,14 @@ const interpretBoolean = (expression: BooleanExpression): boolean => {
         );
     }
   }
+};
+
+const interpretRecord = (expression: RecordExpression): Literal => {
+  const record: LiteralRecord = {};
+
+  Object.entries(expression.expression).forEach(([key, value]) => {
+    record[key] = interpret(value);
+  });
+
+  return record;
 };

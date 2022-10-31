@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { interpret } from "./interpreter";
+import type { Expression, NumberRecordAccess } from "./ast";
 
 describe.concurrent("numbers", () => {
   it.concurrent("works for a number literal", () => {
@@ -29,6 +30,19 @@ describe.concurrent("numbers", () => {
     expect(
       interpret({ type: "number-binary", operator: "/", left: 42, right: 13 })
     ).toBe(3.230769230769231);
+  });
+
+  it.concurrent("works when accessing a record's number", () => {
+    const ast: NumberRecordAccess<"number"> = {
+      type: "number-record-access",
+      key: "number",
+      record: {
+        number: 42,
+        string: "hello world",
+        boolean: true,
+      },
+    };
+    expect(interpret(ast as Expression)).toBe(42);
   });
 });
 
@@ -238,5 +252,24 @@ describe.concurrent("booleans", () => {
         right: true,
       })
     ).toBe(true);
+  });
+});
+
+describe.concurrent("records", () => {
+  it.concurrent("works for a record literal", () => {
+    expect(
+      interpret({
+        type: "record-literal",
+        expression: {
+          number: 42,
+          string: "hello world",
+          boolean: true,
+        },
+      })
+    ).toEqual({
+      number: 42,
+      string: "hello world",
+      boolean: true,
+    });
   });
 });
