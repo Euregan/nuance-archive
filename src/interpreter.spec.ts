@@ -313,3 +313,114 @@ describe.concurrent("records", () => {
     });
   });
 });
+
+describe.concurrent("big ASTs", () => {
+  it.concurrent("works with a large AST returning a number", () => {
+    const ast: NumberRecordAccess<"number"> = {
+      type: "number-record-access",
+      key: "number",
+      record: {
+        type: "record-literal",
+        expression: {
+          number: {
+            type: "number-binary",
+            left: 100,
+            operator: "+",
+            right: {
+              type: "number-unary",
+              operator: "-",
+              expression: 58,
+            },
+          },
+          string: "hello world",
+          boolean: true,
+        },
+      },
+    };
+    expect(interpret(ast as Expression)).toBe(42);
+  });
+
+  it.concurrent("works with a large AST returning a string", () => {
+    const ast: StringRecordAccess<"string"> = {
+      type: "string-record-access",
+      key: "string",
+      record: {
+        type: "record-literal",
+        expression: {
+          number: {
+            type: "number-binary",
+            left: 100,
+            operator: "+",
+            right: {
+              type: "number-unary",
+              operator: "-",
+              expression: 58,
+            },
+          },
+          string: {
+            type: "string-binary",
+            left: "hello",
+            operator: "+",
+            right: {
+              type: "string-binary",
+              left: " ",
+              operator: "+",
+              right: "world",
+            },
+          },
+          boolean: true,
+        },
+      },
+    };
+    expect(interpret(ast as Expression)).toBe("hello world");
+  });
+
+  it.concurrent("works with a large AST returning a boolean", () => {
+    const ast: BooleanRecordAccess<"boolean"> = {
+      type: "boolean-record-access",
+      key: "boolean",
+      record: {
+        type: "record-literal",
+        expression: {
+          number: {
+            type: "number-binary",
+            left: 100,
+            operator: "+",
+            right: {
+              type: "number-unary",
+              operator: "-",
+              expression: 58,
+            },
+          },
+          string: {
+            type: "string-binary",
+            left: "hello",
+            operator: "+",
+            right: {
+              type: "string-binary",
+              left: " ",
+              operator: "+",
+              right: "world",
+            },
+          },
+          boolean: {
+            type: "boolean-boolean-binary",
+            left: {
+              type: "boolean-unary",
+              operator: "!",
+              expression: true,
+            },
+            operator: "||",
+            right: {
+              type: "boolean-number-binary",
+              left: 50,
+              operator: ">",
+              right: 40,
+            },
+          },
+        },
+      },
+    };
+    expect(interpret(ast as Expression)).toBe(true);
+  });
+});
