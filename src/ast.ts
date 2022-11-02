@@ -1,228 +1,371 @@
-export type Expression =
-  | NumberExpression
-  | StringExpression
-  | BooleanExpression
-  | RecordExpression<NuanceRecord>;
+export type AST<
+  NumberSlug extends string = string,
+  StringSlug extends string = string,
+  BooleanSlug extends string = string,
+  RecordSlug extends string = string
+> = {
+  result: Expression<NumberSlug, StringSlug, BooleanSlug, RecordSlug>;
+  numbers: Record<NumberSlug, NumberExpression<NumberSlug, RecordSlug>>;
+  strings: Record<StringSlug, StringExpression<StringSlug, RecordSlug>>;
+  booleans: Record<
+    BooleanSlug,
+    BooleanExpression<NumberSlug, StringSlug, BooleanSlug, RecordSlug>
+  >;
+  records: Record<
+    RecordSlug,
+    RecordExpression<NumberSlug, StringSlug, BooleanSlug, RecordSlug>
+  >;
+};
 
-export type Literal = number | string | boolean | LiteralRecord;
+export type Expression<
+  NumberSlug extends string,
+  StringSlug extends string,
+  BooleanSlug extends string,
+  RecordSlug extends string
+> =
+  | NumberExpression<NumberSlug, RecordSlug>
+  | StringExpression<StringSlug, RecordSlug>
+  | BooleanExpression<NumberSlug, StringSlug, BooleanSlug, RecordSlug>
+  | RecordExpression<NumberSlug, StringSlug, BooleanSlug, RecordSlug>;
+
+export type ActualValue = number | string | boolean | ActualRecord;
 
 // Number
 
-export type NumberExpression =
-  | number
-  | NumberUnary
-  | NumberBinary
-  | NumberRecordAccess;
+export type NumberExpression<
+  NumberSlug extends string,
+  RecordSlug extends string
+> =
+  | NumberLiteral
+  | NumberUnary<NumberSlug>
+  | NumberBinary<NumberSlug>
+  | NumberRecordAccess<RecordSlug>;
 
-export interface NumberUnary {
-  type: "number-unary";
-  operator: "-";
-  expression: NumberExpression;
+export interface NumberLiteral {
+  type: "number-literal";
+  value: number;
 }
 
-export interface NumberBinary {
+export interface NumberUnary<NumberSlug extends string> {
+  type: "number-unary";
+  operator: "-";
+  expression: NumberSlug;
+}
+
+export interface NumberBinary<NumberSlug extends string> {
   type: "number-binary";
-  left: NumberExpression;
+  left: NumberSlug;
   operator: NumberOperator;
-  right: NumberExpression;
+  right: NumberSlug;
 }
 
 export type NumberOperator = "+" | "-" | "*" | "/";
 
 export interface NumberRecordAccess<
-  K extends string = string,
-  O extends NuanceRecord = Record<K, NumberExpression> &
-    Record<Exclude<string, K>, Expression>
+  RecordSlug extends string,
+  K extends string = string
 > {
   type: "number-record-access";
-  record: RecordExpression<O>;
+  record: RecordSlug;
   key: K;
 }
 
 // String
 
-export type StringExpression = string | StringBinary | StringRecordAccess;
+export type StringExpression<
+  StringSlug extends string,
+  RecordSlug extends string
+> = StringLiteral | StringBinary<StringSlug> | StringRecordAccess<RecordSlug>;
 
-export interface StringBinary {
+export interface StringLiteral {
+  type: "string-literal";
+  value: string;
+}
+
+export interface StringBinary<StringSlug extends string> {
   type: "string-binary";
-  left: StringExpression;
+  left: StringSlug;
   operator: StringOperator;
-  right: StringExpression;
+  right: StringSlug;
 }
 
 export type StringOperator = "+";
 
 export interface StringRecordAccess<
-  K extends string = string,
-  O extends NuanceRecord = Record<K, StringExpression> &
-    Record<Exclude<string, K>, Expression>
+  RecordSlug extends string,
+  K extends string = string
 > {
   type: "string-record-access";
-  record: RecordExpression<O>;
+  record: RecordSlug;
   key: K;
 }
 
 // Boolean
 
-export type BooleanExpression =
-  | boolean
-  | BooleanUnary
-  | BooleanBinary
-  | BooleanRecordAccess;
+export type BooleanExpression<
+  NumberSlug extends string,
+  StringSlug extends string,
+  BooleanSlug extends string,
+  RecordSlug extends string
+> =
+  | BooleanLiteral
+  | BooleanUnary<BooleanSlug>
+  | BooleanBinary<NumberSlug, StringSlug, BooleanSlug>
+  | BooleanRecordAccess<RecordSlug>;
 
-export interface BooleanUnary {
+export interface BooleanLiteral {
+  type: "boolean-literal";
+  value: boolean;
+}
+
+export interface BooleanUnary<BooleanSlug extends string> {
   type: "boolean-unary";
   operator: "!";
-  expression: BooleanExpression;
+  expression: BooleanSlug;
 }
 
-interface BooleanNumberBinary {
+interface BooleanNumberBinary<NumberSlug extends string> {
   type: "boolean-number-binary";
-  left: NumberExpression;
+  left: NumberSlug;
   operator: BooleanNumberOperator;
-  right: NumberExpression;
+  right: NumberSlug;
 }
-interface BooleanStringBinary {
+interface BooleanStringBinary<StringSlug extends string> {
   type: "boolean-string-binary";
-  left: StringExpression;
+  left: StringSlug;
   operator: BooleanStringOperator;
-  right: StringExpression;
+  right: StringSlug;
 }
-interface BooleanBooleanBinary {
+interface BooleanBooleanBinary<BooleanSlug extends string> {
   type: "boolean-boolean-binary";
-  left: BooleanExpression;
+  left: BooleanSlug;
   operator: BooleanBooleanOperator;
-  right: BooleanExpression;
+  right: BooleanSlug;
 }
-export type BooleanBinary =
-  | BooleanNumberBinary
-  | BooleanStringBinary
-  | BooleanBooleanBinary;
+export type BooleanBinary<
+  NumberSlug extends string,
+  StringSlug extends string,
+  BooleanSlug extends string
+> =
+  | BooleanNumberBinary<NumberSlug>
+  | BooleanStringBinary<StringSlug>
+  | BooleanBooleanBinary<BooleanSlug>;
 
 export type BooleanNumberOperator = "==" | "!=" | "<" | "<=" | ">" | ">=";
 export type BooleanStringOperator = "==" | "!=";
 export type BooleanBooleanOperator = "&&" | "||";
 
 export interface BooleanRecordAccess<
-  K extends string = string,
-  O extends NuanceRecord = Record<K, BooleanExpression> &
-    Record<Exclude<string, K>, Expression>
+  RecordSlug extends string,
+  K extends string = string
 > {
   type: "boolean-record-access";
-  record: RecordExpression<O>;
+  record: RecordSlug;
   key: K;
 }
 
 // Record
 
-export type LiteralRecord = { [key: string]: Literal };
+export type ActualRecord = { [key: string]: ActualValue };
 
-export type NuanceRecord = { [key: string]: Expression };
+export type RecordExpression<
+  N extends string,
+  S extends string,
+  B extends string,
+  R extends string
+> = RecordLiteral<N, S, B, R>;
 
-export type RecordExpression<R extends NuanceRecord> = RecordLiteral<R>;
+type Reference<
+  N extends string,
+  S extends string,
+  B extends string,
+  R extends string
+> = ["number", N] | ["string", S] | ["boolean", B] | ["record", R];
 
-export interface RecordLiteral<R extends NuanceRecord = NuanceRecord> {
+export interface RecordLiteral<
+  N extends string,
+  S extends string,
+  B extends string,
+  R extends string
+> {
   type: "record-literal";
-  expression: R;
+  value: Record<string, Reference<N, S, B, R>>;
 }
 
 // Checkers
 
-// General
-
-export const isLiteral = (
-  expression: Expression
-): expression is number | string | boolean =>
-  ["number", "string", "boolean"].includes(typeof expression);
-
 // Number
 
-export const isNumberExpression = (
-  expression: Expression
-): expression is NumberExpression =>
-  isNumber(expression) ||
+export const isNumberExpression = <
+  N extends string,
+  S extends string,
+  B extends string,
+  R extends string
+>(
+  expression: Expression<N, S, B, R>
+): expression is NumberExpression<N, R> =>
+  isNumberLiteral(expression) ||
   isNumberUnary(expression) ||
   isNumberBinary(expression) ||
   isNumberRecordAccess(expression);
 
-export const isNumber = (expression: Expression): expression is number =>
-  typeof expression === "number";
+export const isNumberLiteral = <
+  N extends string,
+  S extends string,
+  B extends string,
+  R extends string
+>(
+  expression: Expression<N, S, B, R>
+): expression is NumberLiteral => expression.type === "number-literal";
 
-export const isNumberUnary = (
-  expression: Expression
-): expression is NumberUnary =>
-  !isLiteral(expression) && expression.type === "number-unary";
+export const isNumberUnary = <
+  N extends string,
+  S extends string,
+  B extends string,
+  R extends string
+>(
+  expression: Expression<N, S, B, R>
+): expression is NumberUnary<N> => expression.type === "number-unary";
 
-export const isNumberBinary = (
-  expression: Expression
-): expression is NumberBinary =>
-  !isLiteral(expression) && expression.type === "number-binary";
+export const isNumberBinary = <
+  N extends string,
+  S extends string,
+  B extends string,
+  R extends string
+>(
+  expression: Expression<N, S, B, R>
+): expression is NumberBinary<N> => expression.type === "number-binary";
 
-export const isNumberRecordAccess = (
-  expression: Expression
-): expression is NumberRecordAccess =>
-  !isLiteral(expression) && expression.type === "number-record-access";
+export const isNumberRecordAccess = <
+  N extends string,
+  S extends string,
+  B extends string,
+  R extends string
+>(
+  expression: Expression<N, S, B, R>
+): expression is NumberRecordAccess<R> =>
+  expression.type === "number-record-access";
 
 // String
 
-export const isStringExpression = (
-  expression: Expression
-): expression is StringExpression =>
-  isString(expression) ||
+export const isStringExpression = <
+  N extends string,
+  S extends string,
+  B extends string,
+  R extends string
+>(
+  expression: Expression<N, S, B, R>
+): expression is StringExpression<S, R> =>
+  isStringLiteral(expression) ||
   isStringBinary(expression) ||
   isStringRecordAccess(expression);
 
-export const isString = (expression: Expression): expression is string =>
-  typeof expression === "string";
+export const isStringLiteral = <
+  N extends string,
+  S extends string,
+  B extends string,
+  R extends string
+>(
+  expression: Expression<N, S, B, R>
+): expression is StringLiteral => expression.type === "string-literal";
 
-export const isStringBinary = (
-  expression: Expression
-): expression is NumberBinary =>
-  !isLiteral(expression) && expression.type === "string-binary";
+export const isStringBinary = <
+  N extends string,
+  S extends string,
+  B extends string,
+  R extends string
+>(
+  expression: Expression<N, S, B, R>
+): expression is StringBinary<S> => expression.type === "string-binary";
 
-export const isStringRecordAccess = (
-  expression: Expression
-): expression is StringRecordAccess =>
-  !isLiteral(expression) && expression.type === "string-record-access";
+export const isStringRecordAccess = <
+  N extends string,
+  S extends string,
+  B extends string,
+  R extends string
+>(
+  expression: Expression<N, S, B, R>
+): expression is StringRecordAccess<R> =>
+  expression.type === "string-record-access";
 
 // Boolean
 
-export const isBooleanExpression = (
-  expression: Expression
-): expression is BooleanExpression =>
-  isBoolean(expression) ||
+export const isBooleanExpression = <
+  N extends string,
+  S extends string,
+  B extends string,
+  R extends string
+>(
+  expression: Expression<N, S, B, R>
+): expression is BooleanExpression<N, S, B, R> =>
+  isBooleanLiteral(expression) ||
   isBooleanUnary(expression) ||
   isBooleanBinary(expression) ||
   isBooleanRecordAccess(expression);
 
-export const isBoolean = (expression: Expression): expression is boolean =>
-  typeof expression === "boolean";
+export const isBooleanLiteral = <
+  N extends string,
+  S extends string,
+  B extends string,
+  R extends string
+>(
+  expression: Expression<N, S, B, R>
+): expression is BooleanLiteral => expression.type === "boolean-literal";
 
-export const isBooleanUnary = (
-  expression: Expression
-): expression is BooleanUnary =>
-  !isLiteral(expression) && expression.type === "boolean-unary";
+export const isBooleanUnary = <
+  N extends string,
+  S extends string,
+  B extends string,
+  R extends string
+>(
+  expression: Expression<N, S, B, R>
+): expression is BooleanUnary<B> => expression.type === "boolean-unary";
 
-export const isBooleanBinary = (
-  expression: Expression
-): expression is BooleanBinary =>
+export const isBooleanBinary = <
+  N extends string,
+  S extends string,
+  B extends string,
+  R extends string
+>(
+  expression: Expression<N, S, B, R>
+): expression is BooleanBinary<N, S, B> =>
   isBooleanNumberBinary(expression) ||
   isBooleanStringBinary(expression) ||
   isBooleanBooleanBinary(expression);
-export const isBooleanNumberBinary = (
-  expression: Expression
-): expression is BooleanNumberBinary =>
-  !isLiteral(expression) && expression.type === "boolean-number-binary";
-export const isBooleanStringBinary = (
-  expression: Expression
-): expression is BooleanStringBinary =>
-  !isLiteral(expression) && expression.type === "boolean-string-binary";
-export const isBooleanBooleanBinary = (
-  expression: Expression
-): expression is BooleanBooleanBinary =>
-  !isLiteral(expression) && expression.type === "boolean-boolean-binary";
+export const isBooleanNumberBinary = <
+  N extends string,
+  S extends string,
+  B extends string,
+  R extends string
+>(
+  expression: Expression<N, S, B, R>
+): expression is BooleanNumberBinary<N> =>
+  expression.type === "boolean-number-binary";
+export const isBooleanStringBinary = <
+  N extends string,
+  S extends string,
+  B extends string,
+  R extends string
+>(
+  expression: Expression<N, S, B, R>
+): expression is BooleanStringBinary<S> =>
+  expression.type === "boolean-string-binary";
+export const isBooleanBooleanBinary = <
+  N extends string,
+  S extends string,
+  B extends string,
+  R extends string
+>(
+  expression: Expression<N, S, B, R>
+): expression is BooleanBooleanBinary<B> =>
+  expression.type === "boolean-boolean-binary";
 
-export const isBooleanRecordAccess = (
-  expression: Expression
-): expression is BooleanRecordAccess =>
-  !isLiteral(expression) && expression.type === "boolean-record-access";
+export const isBooleanRecordAccess = <
+  N extends string,
+  S extends string,
+  B extends string,
+  R extends string
+>(
+  expression: Expression<N, S, B, R>
+): expression is BooleanRecordAccess<R> =>
+  expression.type === "boolean-record-access";

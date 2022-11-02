@@ -1,207 +1,428 @@
 import { describe, it, expect } from "vitest";
 import { interpret } from "./interpreter";
-import type {
-  Expression,
-  NumberRecordAccess,
-  StringRecordAccess,
-  BooleanRecordAccess,
-} from "./ast";
 
 describe.concurrent("numbers", () => {
   it.concurrent("works for a number literal", () => {
-    expect(interpret(42)).toBe(42);
-    expect(interpret(-42)).toBe(-42);
+    expect(
+      interpret({
+        result: { type: "number-literal", value: 42 },
+        numbers: {},
+        strings: {},
+        booleans: {},
+        records: {},
+      })
+    ).toBe(42);
+    expect(
+      interpret({
+        result: { type: "number-literal", value: -42 },
+        numbers: {},
+        strings: {},
+        booleans: {},
+        records: {},
+      })
+    ).toBe(-42);
   });
 
   it.concurrent("works for a number unary", () => {
     expect(
-      interpret({ type: "number-unary", operator: "-", expression: 42 })
+      interpret({
+        result: { type: "number-unary", operator: "-", expression: "1" },
+        numbers: { "1": { type: "number-literal", value: 42 } },
+        strings: {},
+        booleans: {},
+        records: {},
+      })
     ).toBe(-42);
     expect(
-      interpret({ type: "number-unary", operator: "-", expression: -42 })
+      interpret({
+        result: { type: "number-unary", operator: "-", expression: "1" },
+        numbers: { "1": { type: "number-literal", value: -42 } },
+        strings: {},
+        booleans: {},
+        records: {},
+      })
     ).toBe(42);
   });
 
   it.concurrent("works for a number binary", () => {
     expect(
-      interpret({ type: "number-binary", operator: "-", left: 42, right: 13 })
+      interpret({
+        result: { type: "number-binary", operator: "-", left: "1", right: "2" },
+        numbers: {
+          "1": { type: "number-literal", value: 42 },
+          "2": { type: "number-literal", value: 13 },
+        },
+        strings: {},
+        booleans: {},
+        records: {},
+      })
     ).toBe(29);
     expect(
-      interpret({ type: "number-binary", operator: "+", left: 42, right: 13 })
+      interpret({
+        result: { type: "number-binary", operator: "+", left: "1", right: "2" },
+        numbers: {
+          "1": { type: "number-literal", value: 42 },
+          "2": { type: "number-literal", value: 13 },
+        },
+        strings: {},
+        booleans: {},
+        records: {},
+      })
     ).toBe(55);
     expect(
-      interpret({ type: "number-binary", operator: "*", left: 42, right: 13 })
+      interpret({
+        result: { type: "number-binary", operator: "*", left: "1", right: "2" },
+        numbers: {
+          "1": { type: "number-literal", value: 42 },
+          "2": { type: "number-literal", value: 13 },
+        },
+        strings: {},
+        booleans: {},
+        records: {},
+      })
     ).toBe(546);
     expect(
-      interpret({ type: "number-binary", operator: "/", left: 42, right: 13 })
+      interpret({
+        result: { type: "number-binary", operator: "/", left: "1", right: "2" },
+        numbers: {
+          "1": { type: "number-literal", value: 42 },
+          "2": { type: "number-literal", value: 13 },
+        },
+        strings: {},
+        booleans: {},
+        records: {},
+      })
     ).toBe(3.230769230769231);
   });
 
   it.concurrent("works when accessing a record's number", () => {
-    const ast: NumberRecordAccess<"number"> = {
-      type: "number-record-access",
-      key: "number",
-      record: {
-        type: "record-literal",
-        expression: {
-          number: 42,
-          string: "hello world",
-          boolean: true,
+    expect(
+      interpret({
+        result: { type: "number-record-access", key: "number", record: "1" },
+        numbers: { "1": { type: "number-literal", value: 42 } },
+        strings: { "1": { type: "string-literal", value: "hello world" } },
+        booleans: { "1": { type: "boolean-literal", value: true } },
+        records: {
+          "1": {
+            type: "record-literal",
+            value: {
+              number: ["number", "1"],
+              string: ["string", "1"],
+              boolean: ["boolean", "1"],
+            },
+          },
         },
-      },
-    };
-    expect(interpret(ast as Expression)).toBe(42);
+      })
+    ).toBe(42);
   });
 });
 
 describe.concurrent("strings", () => {
   it.concurrent("works for a string literal", () => {
-    expect(interpret("hello world")).toBe("hello world");
+    expect(
+      interpret({
+        result: { type: "string-literal", value: "hello world" },
+        numbers: {},
+        strings: {},
+        booleans: {},
+        records: {},
+      })
+    ).toBe("hello world");
   });
 
   it.concurrent("works for a string binary", () => {
     expect(
       interpret({
-        type: "string-binary",
-        operator: "+",
-        left: "hello ",
-        right: "world",
+        result: {
+          type: "string-binary",
+          operator: "+",
+          left: "1",
+          right: "2",
+        },
+        numbers: {},
+        strings: {
+          "1": { type: "string-literal", value: "hello " },
+          "2": { type: "string-literal", value: "world" },
+        },
+        booleans: {},
+        records: {},
       })
     ).toBe("hello world");
   });
 
   it.concurrent("works when accessing a record's string", () => {
-    const ast: StringRecordAccess<"string"> = {
-      type: "string-record-access",
-      key: "string",
-      record: {
-        type: "record-literal",
-        expression: {
-          number: 42,
-          string: "hello world",
-          boolean: true,
+    expect(
+      interpret({
+        result: { type: "string-record-access", key: "string", record: "1" },
+        numbers: { "1": { type: "number-literal", value: 42 } },
+        strings: { "1": { type: "string-literal", value: "hello world" } },
+        booleans: { "1": { type: "boolean-literal", value: true } },
+        records: {
+          "1": {
+            type: "record-literal",
+            value: {
+              number: ["number", "1"],
+              string: ["string", "1"],
+              boolean: ["boolean", "1"],
+            },
+          },
         },
-      },
-    };
-    expect(interpret(ast as Expression)).toBe("hello world");
+      })
+    ).toBe("hello world");
   });
 });
 
 describe.concurrent("booleans", () => {
   it.concurrent("works for a boolean literal", () => {
-    expect(interpret(true)).toBe(true);
-    expect(interpret(false)).toBe(false);
+    expect(
+      interpret({
+        result: { type: "boolean-literal", value: true },
+        numbers: {},
+        strings: {},
+        booleans: {},
+        records: {},
+      })
+    ).toBe(true);
+    expect(
+      interpret({
+        result: { type: "boolean-literal", value: false },
+        numbers: {},
+        strings: {},
+        booleans: {},
+        records: {},
+      })
+    ).toBe(false);
   });
 
   it.concurrent("works for a boolean unary", () => {
     expect(
-      interpret({ type: "boolean-unary", operator: "!", expression: true })
+      interpret({
+        result: { type: "boolean-unary", operator: "!", expression: "1" },
+        numbers: {},
+        strings: {},
+        booleans: { "1": { type: "boolean-literal", value: true } },
+        records: {},
+      })
     ).toBe(false);
     expect(
-      interpret({ type: "boolean-unary", operator: "!", expression: false })
+      interpret({
+        result: { type: "boolean-unary", operator: "!", expression: "1" },
+        numbers: {},
+        strings: {},
+        booleans: { "1": { type: "boolean-literal", value: false } },
+        records: {},
+      })
     ).toBe(true);
   });
 
   it.concurrent("works for a boolean number binary", () => {
     expect(
       interpret({
-        type: "boolean-number-binary",
-        operator: "==",
-        left: 42,
-        right: 13,
+        result: {
+          type: "boolean-number-binary",
+          operator: "==",
+          left: "1",
+          right: "2",
+        },
+        numbers: {
+          "1": { type: "number-literal", value: 42 },
+          "2": { type: "number-literal", value: 13 },
+        },
+        strings: {},
+        booleans: {},
+        records: {},
       })
     ).toBe(false);
     expect(
       interpret({
-        type: "boolean-number-binary",
-        operator: "==",
-        left: 42,
-        right: 42,
+        result: {
+          type: "boolean-number-binary",
+          operator: "==",
+          left: "1",
+          right: "2",
+        },
+        numbers: {
+          "1": { type: "number-literal", value: 42 },
+          "2": { type: "number-literal", value: 42 },
+        },
+        strings: {},
+        booleans: {},
+        records: {},
       })
     ).toBe(true);
 
     expect(
       interpret({
-        type: "boolean-number-binary",
-        operator: "!=",
-        left: 42,
-        right: 13,
+        result: {
+          type: "boolean-number-binary",
+          operator: "!=",
+          left: "1",
+          right: "2",
+        },
+        numbers: {
+          "1": { type: "number-literal", value: 42 },
+          "2": { type: "number-literal", value: 13 },
+        },
+        strings: {},
+        booleans: {},
+        records: {},
       })
     ).toBe(true);
     expect(
       interpret({
-        type: "boolean-number-binary",
-        operator: "!=",
-        left: 42,
-        right: 42,
+        result: {
+          type: "boolean-number-binary",
+          operator: "!=",
+          left: "1",
+          right: "2",
+        },
+        numbers: {
+          "1": { type: "number-literal", value: 42 },
+          "2": { type: "number-literal", value: 42 },
+        },
+        strings: {},
+        booleans: {},
+        records: {},
       })
     ).toBe(false);
 
     expect(
       interpret({
-        type: "boolean-number-binary",
-        operator: ">",
-        left: 42,
-        right: 13,
+        result: {
+          type: "boolean-number-binary",
+          operator: ">",
+          left: "1",
+          right: "2",
+        },
+        numbers: {
+          "1": { type: "number-literal", value: 42 },
+          "2": { type: "number-literal", value: 13 },
+        },
+        strings: {},
+        booleans: {},
+        records: {},
       })
     ).toBe(true);
     expect(
       interpret({
-        type: "boolean-number-binary",
-        operator: ">",
-        left: 42,
-        right: 42,
+        result: {
+          type: "boolean-number-binary",
+          operator: ">",
+          left: "1",
+          right: "2",
+        },
+        numbers: {
+          "1": { type: "number-literal", value: 42 },
+          "2": { type: "number-literal", value: 42 },
+        },
+        strings: {},
+        booleans: {},
+        records: {},
       })
     ).toBe(false);
 
     expect(
       interpret({
-        type: "boolean-number-binary",
-        operator: ">=",
-        left: 42,
-        right: 13,
+        result: {
+          type: "boolean-number-binary",
+          operator: ">=",
+          left: "1",
+          right: "2",
+        },
+        numbers: {
+          "1": { type: "number-literal", value: 42 },
+          "2": { type: "number-literal", value: 13 },
+        },
+        strings: {},
+        booleans: {},
+        records: {},
       })
     ).toBe(true);
     expect(
       interpret({
-        type: "boolean-number-binary",
-        operator: ">=",
-        left: 42,
-        right: 42,
+        result: {
+          type: "boolean-number-binary",
+          operator: ">=",
+          left: "1",
+          right: "2",
+        },
+        numbers: {
+          "1": { type: "number-literal", value: 42 },
+          "2": { type: "number-literal", value: 42 },
+        },
+        strings: {},
+        booleans: {},
+        records: {},
       })
     ).toBe(true);
 
     expect(
       interpret({
-        type: "boolean-number-binary",
-        operator: "<",
-        left: 42,
-        right: 13,
+        result: {
+          type: "boolean-number-binary",
+          operator: "<",
+          left: "1",
+          right: "2",
+        },
+        numbers: {
+          "1": { type: "number-literal", value: 42 },
+          "2": { type: "number-literal", value: 13 },
+        },
+        strings: {},
+        booleans: {},
+        records: {},
       })
     ).toBe(false);
     expect(
       interpret({
-        type: "boolean-number-binary",
-        operator: "<",
-        left: 42,
-        right: 42,
+        result: {
+          type: "boolean-number-binary",
+          operator: "<",
+          left: "1",
+          right: "2",
+        },
+        numbers: {
+          "1": { type: "number-literal", value: 42 },
+          "2": { type: "number-literal", value: 42 },
+        },
+        strings: {},
+        booleans: {},
+        records: {},
       })
     ).toBe(false);
 
     expect(
       interpret({
-        type: "boolean-number-binary",
-        operator: "<=",
-        left: 42,
-        right: 13,
+        result: {
+          type: "boolean-number-binary",
+          operator: "<=",
+          left: "1",
+          right: "2",
+        },
+        numbers: {
+          "1": { type: "number-literal", value: 42 },
+          "2": { type: "number-literal", value: 13 },
+        },
+        strings: {},
+        booleans: {},
+        records: {},
       })
     ).toBe(false);
     expect(
       interpret({
-        type: "boolean-number-binary",
-        operator: "<=",
-        left: 42,
-        right: 42,
+        result: {
+          type: "boolean-number-binary",
+          operator: "<=",
+          left: "1",
+          right: "2",
+        },
+        numbers: {
+          "1": { type: "number-literal", value: 42 },
+          "2": { type: "number-literal", value: 42 },
+        },
+        strings: {},
+        booleans: {},
+        records: {},
       })
     ).toBe(true);
   });
@@ -209,35 +430,71 @@ describe.concurrent("booleans", () => {
   it.concurrent("works for a boolean string binary", () => {
     expect(
       interpret({
-        type: "boolean-string-binary",
-        operator: "==",
-        left: "hello",
-        right: "world",
+        result: {
+          type: "boolean-string-binary",
+          operator: "==",
+          left: "1",
+          right: "2",
+        },
+        numbers: {},
+        strings: {
+          "1": { type: "string-literal", value: "hello" },
+          "2": { type: "string-literal", value: "world" },
+        },
+        booleans: {},
+        records: {},
       })
     ).toBe(false);
     expect(
       interpret({
-        type: "boolean-string-binary",
-        operator: "==",
-        left: "hello",
-        right: "hello",
+        result: {
+          type: "boolean-string-binary",
+          operator: "==",
+          left: "1",
+          right: "2",
+        },
+        numbers: {},
+        strings: {
+          "1": { type: "string-literal", value: "hello" },
+          "2": { type: "string-literal", value: "hello" },
+        },
+        booleans: {},
+        records: {},
       })
     ).toBe(true);
 
     expect(
       interpret({
-        type: "boolean-string-binary",
-        operator: "!=",
-        left: "hello",
-        right: "world",
+        result: {
+          type: "boolean-string-binary",
+          operator: "!=",
+          left: "1",
+          right: "2",
+        },
+        numbers: {},
+        strings: {
+          "1": { type: "string-literal", value: "hello" },
+          "2": { type: "string-literal", value: "world" },
+        },
+        booleans: {},
+        records: {},
       })
     ).toBe(true);
     expect(
       interpret({
-        type: "boolean-string-binary",
-        operator: "!=",
-        left: "hello",
-        right: "hello",
+        result: {
+          type: "boolean-string-binary",
+          operator: "!=",
+          left: "1",
+          right: "2",
+        },
+        numbers: {},
+        strings: {
+          "1": { type: "string-literal", value: "hello" },
+          "2": { type: "string-literal", value: "hello" },
+        },
+        booleans: {},
+        records: {},
       })
     ).toBe(false);
   });
@@ -245,53 +502,128 @@ describe.concurrent("booleans", () => {
   it.concurrent("works for a boolean boolean binary", () => {
     expect(
       interpret({
-        type: "boolean-boolean-binary",
-        operator: "&&",
-        left: true,
-        right: false,
+        result: {
+          type: "boolean-boolean-binary",
+          operator: "&&",
+          left: "1",
+          right: "2",
+        },
+        numbers: {},
+        strings: {},
+        booleans: {
+          "1": { type: "boolean-literal", value: true },
+          "2": { type: "boolean-literal", value: false },
+        },
+        records: {},
       })
     ).toBe(false);
     expect(
       interpret({
-        type: "boolean-boolean-binary",
-        operator: "&&",
-        left: true,
-        right: true,
+        result: {
+          type: "boolean-boolean-binary",
+          operator: "&&",
+          left: "1",
+          right: "2",
+        },
+        numbers: {},
+        strings: {},
+        booleans: {
+          "1": { type: "boolean-literal", value: true },
+          "2": { type: "boolean-literal", value: true },
+        },
+        records: {},
       })
     ).toBe(true);
+    expect(
+      interpret({
+        result: {
+          type: "boolean-boolean-binary",
+          operator: "&&",
+          left: "1",
+          right: "2",
+        },
+        numbers: {},
+        strings: {},
+        booleans: {
+          "1": { type: "boolean-literal", value: false },
+          "2": { type: "boolean-literal", value: false },
+        },
+        records: {},
+      })
+    ).toBe(false);
 
     expect(
       interpret({
-        type: "boolean-boolean-binary",
-        operator: "||",
-        left: true,
-        right: false,
+        result: {
+          type: "boolean-boolean-binary",
+          operator: "||",
+          left: "1",
+          right: "2",
+        },
+        numbers: {},
+        strings: {},
+        booleans: {
+          "1": { type: "boolean-literal", value: true },
+          "2": { type: "boolean-literal", value: false },
+        },
+        records: {},
       })
     ).toBe(true);
     expect(
       interpret({
-        type: "boolean-boolean-binary",
-        operator: "||",
-        left: true,
-        right: true,
+        result: {
+          type: "boolean-boolean-binary",
+          operator: "||",
+          left: "1",
+          right: "2",
+        },
+        numbers: {},
+        strings: {},
+        booleans: {
+          "1": { type: "boolean-literal", value: true },
+          "2": { type: "boolean-literal", value: true },
+        },
+        records: {},
       })
     ).toBe(true);
+    expect(
+      interpret({
+        result: {
+          type: "boolean-boolean-binary",
+          operator: "||",
+          left: "1",
+          right: "2",
+        },
+        numbers: {},
+        strings: {},
+        booleans: {
+          "1": { type: "boolean-literal", value: false },
+          "2": { type: "boolean-literal", value: false },
+        },
+        records: {},
+      })
+    ).toBe(false);
   });
 
   it.concurrent("works when accessing a record's boolean", () => {
-    const ast: BooleanRecordAccess<"boolean"> = {
-      type: "boolean-record-access",
-      key: "boolean",
-      record: {
-        type: "record-literal",
-        expression: {
-          number: 42,
-          string: "hello world",
-          boolean: true,
+    expect(
+      interpret({
+        result: { type: "boolean-record-access", key: "boolean", record: "1" },
+        numbers: { "1": { type: "number-literal", value: 42 } },
+        strings: { "1": { type: "string-literal", value: "hello world" } },
+        booleans: { "1": { type: "boolean-literal", value: true } },
+        records: {
+          "1": {
+            type: "record-literal",
+            value: {
+              number: ["number", "1"],
+              string: ["string", "1"],
+              boolean: ["boolean", "1"],
+            },
+          },
         },
-      },
-    };
-    expect(interpret(ast as Expression)).toBe(true);
+      })
+    ).toBe(true);
   });
 });
 
@@ -299,12 +631,18 @@ describe.concurrent("records", () => {
   it.concurrent("works for a record literal", () => {
     expect(
       interpret({
-        type: "record-literal",
-        expression: {
-          number: 42,
-          string: "hello world",
-          boolean: true,
+        result: {
+          type: "record-literal",
+          value: {
+            number: ["number", "1"],
+            string: ["string", "1"],
+            boolean: ["boolean", "1"],
+          },
         },
+        numbers: { "1": { type: "number-literal", value: 42 } },
+        strings: { "1": { type: "string-literal", value: "hello world" } },
+        booleans: { "1": { type: "boolean-literal", value: true } },
+        records: {},
       })
     ).toEqual({
       number: 42,
@@ -316,111 +654,272 @@ describe.concurrent("records", () => {
 
 describe.concurrent("big ASTs", () => {
   it.concurrent("works with a large AST returning a number", () => {
-    const ast: NumberRecordAccess<"number"> = {
-      type: "number-record-access",
-      key: "number",
-      record: {
-        type: "record-literal",
-        expression: {
-          number: {
+    expect(
+      interpret({
+        result: { type: "number-record-access", key: "number", record: "1" },
+        numbers: {
+          "1": {
             type: "number-binary",
-            left: 100,
+            left: "2",
             operator: "+",
-            right: {
-              type: "number-unary",
-              operator: "-",
-              expression: 58,
+            right: "3",
+          },
+          "2": {
+            type: "number-literal",
+            value: 100,
+          },
+          "3": {
+            type: "number-unary",
+            operator: "-",
+            expression: "4",
+          },
+          "4": {
+            type: "number-literal",
+            value: 58,
+          },
+          "5": { type: "number-literal", value: 50 },
+          "6": { type: "number-literal", value: 40 },
+        },
+        strings: {
+          "1": {
+            type: "string-binary",
+            left: "2",
+            operator: "+",
+            right: "3",
+          },
+          "2": {
+            type: "string-literal",
+            value: "hello",
+          },
+          "3": {
+            type: "string-binary",
+            left: "4",
+            operator: "+",
+            right: "5",
+          },
+          "4": {
+            type: "string-literal",
+            value: " ",
+          },
+          "5": {
+            type: "string-literal",
+            value: "world",
+          },
+        },
+        booleans: {
+          "1": {
+            type: "boolean-boolean-binary",
+            left: "2",
+            operator: "||",
+            right: "3",
+          },
+          "2": {
+            type: "boolean-unary",
+            operator: "!",
+            expression: "4",
+          },
+          "3": {
+            type: "boolean-number-binary",
+            left: "5",
+            operator: ">",
+            right: "6",
+          },
+          "4": {
+            type: "boolean-literal",
+            value: true,
+          },
+        },
+        records: {
+          "1": {
+            type: "record-literal",
+            value: {
+              number: ["number", "1"],
+              string: ["string", "1"],
+              boolean: ["boolean", "1"],
             },
           },
-          string: "hello world",
-          boolean: true,
         },
-      },
-    };
-    expect(interpret(ast as Expression)).toBe(42);
+      })
+    ).toBe(42);
   });
 
   it.concurrent("works with a large AST returning a string", () => {
-    const ast: StringRecordAccess<"string"> = {
-      type: "string-record-access",
-      key: "string",
-      record: {
-        type: "record-literal",
-        expression: {
-          number: {
+    expect(
+      interpret({
+        result: { type: "string-record-access", key: "string", record: "1" },
+        numbers: {
+          "1": {
             type: "number-binary",
-            left: 100,
+            left: "2",
             operator: "+",
-            right: {
-              type: "number-unary",
-              operator: "-",
-              expression: 58,
-            },
+            right: "3",
           },
-          string: {
-            type: "string-binary",
-            left: "hello",
-            operator: "+",
-            right: {
-              type: "string-binary",
-              left: " ",
-              operator: "+",
-              right: "world",
-            },
+          "2": {
+            type: "number-literal",
+            value: 100,
           },
-          boolean: true,
+          "3": {
+            type: "number-unary",
+            operator: "-",
+            expression: "4",
+          },
+          "4": {
+            type: "number-literal",
+            value: 58,
+          },
+          "5": { type: "number-literal", value: 50 },
+          "6": { type: "number-literal", value: 40 },
         },
-      },
-    };
-    expect(interpret(ast as Expression)).toBe("hello world");
+        strings: {
+          "1": {
+            type: "string-binary",
+            left: "2",
+            operator: "+",
+            right: "3",
+          },
+          "2": {
+            type: "string-literal",
+            value: "hello",
+          },
+          "3": {
+            type: "string-binary",
+            left: "4",
+            operator: "+",
+            right: "5",
+          },
+          "4": {
+            type: "string-literal",
+            value: " ",
+          },
+          "5": {
+            type: "string-literal",
+            value: "world",
+          },
+        },
+        booleans: {
+          "1": {
+            type: "boolean-boolean-binary",
+            left: "2",
+            operator: "||",
+            right: "3",
+          },
+          "2": {
+            type: "boolean-unary",
+            operator: "!",
+            expression: "4",
+          },
+          "3": {
+            type: "boolean-number-binary",
+            left: "5",
+            operator: ">",
+            right: "6",
+          },
+          "4": {
+            type: "boolean-literal",
+            value: true,
+          },
+        },
+        records: {
+          "1": {
+            type: "record-literal",
+            value: {
+              number: ["number", "1"],
+              string: ["string", "1"],
+              boolean: ["boolean", "1"],
+            },
+          },
+        },
+      })
+    ).toBe("hello world");
   });
 
   it.concurrent("works with a large AST returning a boolean", () => {
-    const ast: BooleanRecordAccess<"boolean"> = {
-      type: "boolean-record-access",
-      key: "boolean",
-      record: {
-        type: "record-literal",
-        expression: {
-          number: {
+    expect(
+      interpret({
+        result: { type: "boolean-record-access", key: "boolean", record: "1" },
+        numbers: {
+          "1": {
             type: "number-binary",
-            left: 100,
+            left: "2",
             operator: "+",
-            right: {
-              type: "number-unary",
-              operator: "-",
-              expression: 58,
-            },
+            right: "3",
           },
-          string: {
+          "2": {
+            type: "number-literal",
+            value: 100,
+          },
+          "3": {
+            type: "number-unary",
+            operator: "-",
+            expression: "4",
+          },
+          "4": {
+            type: "number-literal",
+            value: 58,
+          },
+          "5": { type: "number-literal", value: 50 },
+          "6": { type: "number-literal", value: 40 },
+        },
+        strings: {
+          "1": {
             type: "string-binary",
-            left: "hello",
+            left: "2",
             operator: "+",
-            right: {
-              type: "string-binary",
-              left: " ",
-              operator: "+",
-              right: "world",
-            },
+            right: "3",
           },
-          boolean: {
+          "2": {
+            type: "string-literal",
+            value: "hello",
+          },
+          "3": {
+            type: "string-binary",
+            left: "4",
+            operator: "+",
+            right: "5",
+          },
+          "4": {
+            type: "string-literal",
+            value: " ",
+          },
+          "5": {
+            type: "string-literal",
+            value: "world",
+          },
+        },
+        booleans: {
+          "1": {
             type: "boolean-boolean-binary",
-            left: {
-              type: "boolean-unary",
-              operator: "!",
-              expression: true,
-            },
+            left: "2",
             operator: "||",
-            right: {
-              type: "boolean-number-binary",
-              left: 50,
-              operator: ">",
-              right: 40,
+            right: "3",
+          },
+          "2": {
+            type: "boolean-unary",
+            operator: "!",
+            expression: "4",
+          },
+          "3": {
+            type: "boolean-number-binary",
+            left: "5",
+            operator: ">",
+            right: "6",
+          },
+          "4": {
+            type: "boolean-literal",
+            value: true,
+          },
+        },
+        records: {
+          "1": {
+            type: "record-literal",
+            value: {
+              number: ["number", "1"],
+              string: ["string", "1"],
+              boolean: ["boolean", "1"],
             },
           },
         },
-      },
-    };
-    expect(interpret(ast as Expression)).toBe(true);
+      })
+    ).toBe(true);
   });
 });
