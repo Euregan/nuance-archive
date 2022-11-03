@@ -5,8 +5,14 @@ export type AST<
   RecordSlug extends string = string
 > = {
   result: Expression<NumberSlug, StringSlug, BooleanSlug, RecordSlug>;
-  numbers: Record<NumberSlug, NumberExpression<NumberSlug, RecordSlug>>;
-  strings: Record<StringSlug, StringExpression<StringSlug, RecordSlug>>;
+  numbers: Record<
+    NumberSlug,
+    NumberExpression<NumberSlug, BooleanSlug, RecordSlug>
+  >;
+  strings: Record<
+    StringSlug,
+    StringExpression<StringSlug, BooleanSlug, RecordSlug>
+  >;
   booleans: Record<
     BooleanSlug,
     BooleanExpression<NumberSlug, StringSlug, BooleanSlug, RecordSlug>
@@ -23,8 +29,8 @@ export type Expression<
   BooleanSlug extends string,
   RecordSlug extends string
 > =
-  | NumberExpression<NumberSlug, RecordSlug>
-  | StringExpression<StringSlug, RecordSlug>
+  | NumberExpression<NumberSlug, BooleanSlug, RecordSlug>
+  | StringExpression<StringSlug, BooleanSlug, RecordSlug>
   | BooleanExpression<NumberSlug, StringSlug, BooleanSlug, RecordSlug>
   | RecordExpression<NumberSlug, StringSlug, BooleanSlug, RecordSlug>;
 
@@ -34,12 +40,14 @@ export type ActualValue = number | string | boolean | ActualRecord;
 
 export type NumberExpression<
   NumberSlug extends string,
+  BooleanSlug extends string,
   RecordSlug extends string
 > =
   | NumberLiteral
   | NumberUnary<NumberSlug>
   | NumberBinary<NumberSlug>
-  | NumberRecordAccess<RecordSlug>;
+  | NumberRecordAccess<RecordSlug>
+  | NumberIf<NumberSlug, BooleanSlug>;
 
 export interface NumberLiteral {
   type: "number-literal";
@@ -70,12 +78,24 @@ export interface NumberRecordAccess<
   key: K;
 }
 
+export interface NumberIf<N extends string, B extends string> {
+  type: "number-if";
+  condition: B;
+  true: N;
+  false: N;
+}
+
 // String
 
 export type StringExpression<
   StringSlug extends string,
+  BooleanSlug extends string,
   RecordSlug extends string
-> = StringLiteral | StringBinary<StringSlug> | StringRecordAccess<RecordSlug>;
+> =
+  | StringLiteral
+  | StringBinary<StringSlug>
+  | StringRecordAccess<RecordSlug>
+  | StringIf<StringSlug, BooleanSlug>;
 
 export interface StringLiteral {
   type: "string-literal";
@@ -98,6 +118,13 @@ export interface StringRecordAccess<
   type: "string-record-access";
   record: RecordSlug;
   key: K;
+}
+
+export interface StringIf<S extends string, B extends string> {
+  type: "string-if";
+  condition: B;
+  true: S;
+  false: S;
 }
 
 // Boolean
@@ -173,7 +200,7 @@ export type RecordExpression<
   S extends string,
   B extends string,
   R extends string
-> = RecordLiteral<N, S, B, R>;
+> = RecordLiteral<N, S, B, R> | RecordIf<B, R>;
 
 type Reference<
   N extends string,
@@ -192,6 +219,13 @@ export interface RecordLiteral<
   value: Record<string, Reference<N, S, B, R>>;
 }
 
+export interface RecordIf<B extends string, R extends string> {
+  type: "record-if";
+  condition: B;
+  true: R;
+  false: R;
+}
+
 // Checkers
 
 // Number
@@ -203,11 +237,12 @@ export const isNumberExpression = <
   R extends string
 >(
   expression: Expression<N, S, B, R>
-): expression is NumberExpression<N, R> =>
+): expression is NumberExpression<N, B, R> =>
   isNumberLiteral(expression) ||
   isNumberUnary(expression) ||
   isNumberBinary(expression) ||
-  isNumberRecordAccess(expression);
+  isNumberRecordAccess(expression) ||
+  isNumberIf(expression);
 
 export const isNumberLiteral = <
   N extends string,
@@ -246,6 +281,15 @@ export const isNumberRecordAccess = <
 ): expression is NumberRecordAccess<R> =>
   expression.type === "number-record-access";
 
+export const isNumberIf = <
+  N extends string,
+  S extends string,
+  B extends string,
+  R extends string
+>(
+  expression: Expression<N, S, B, R>
+): expression is NumberIf<N, B> => expression.type === "number-if";
+
 // String
 
 export const isStringExpression = <
@@ -255,10 +299,11 @@ export const isStringExpression = <
   R extends string
 >(
   expression: Expression<N, S, B, R>
-): expression is StringExpression<S, R> =>
+): expression is StringExpression<S, B, R> =>
   isStringLiteral(expression) ||
   isStringBinary(expression) ||
-  isStringRecordAccess(expression);
+  isStringRecordAccess(expression) ||
+  isStringIf(expression);
 
 export const isStringLiteral = <
   N extends string,
@@ -287,6 +332,15 @@ export const isStringRecordAccess = <
   expression: Expression<N, S, B, R>
 ): expression is StringRecordAccess<R> =>
   expression.type === "string-record-access";
+
+export const isStringIf = <
+  N extends string,
+  S extends string,
+  B extends string,
+  R extends string
+>(
+  expression: Expression<N, S, B, R>
+): expression is StringIf<S, B> => expression.type === "string-if";
 
 // Boolean
 
@@ -369,3 +423,15 @@ export const isBooleanRecordAccess = <
   expression: Expression<N, S, B, R>
 ): expression is BooleanRecordAccess<R> =>
   expression.type === "boolean-record-access";
+
+// Records
+
+export const isRecordLiteral = <
+  N extends string,
+  S extends string,
+  B extends string,
+  R extends string
+>(
+  expression: Expression<N, S, B, R>
+): expression is RecordLiteral<N, S, B, R> =>
+  expression.type === "record-literal";

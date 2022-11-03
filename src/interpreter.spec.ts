@@ -115,6 +115,33 @@ describe.concurrent("numbers", () => {
       })
     ).toBe(42);
   });
+
+  it.concurrent("works when using an if", () => {
+    expect(
+      interpret({
+        result: { type: "number-if", condition: "1", true: "1", false: "2" },
+        numbers: {
+          "1": { type: "number-literal", value: 42 },
+          "2": { type: "number-literal", value: 13 },
+        },
+        strings: {},
+        booleans: { "1": { type: "boolean-literal", value: true } },
+        records: {},
+      })
+    ).toBe(42);
+    expect(
+      interpret({
+        result: { type: "number-if", condition: "1", true: "1", false: "2" },
+        numbers: {
+          "1": { type: "number-literal", value: 42 },
+          "2": { type: "number-literal", value: 13 },
+        },
+        strings: {},
+        booleans: { "1": { type: "boolean-literal", value: false } },
+        records: {},
+      })
+    ).toBe(13);
+  });
 });
 
 describe.concurrent("strings", () => {
@@ -169,6 +196,33 @@ describe.concurrent("strings", () => {
         },
       })
     ).toBe("hello world");
+  });
+
+  it.concurrent("works when using an if", () => {
+    expect(
+      interpret({
+        result: { type: "string-if", condition: "1", true: "1", false: "2" },
+        numbers: {},
+        strings: {
+          "1": { type: "string-literal", value: "hello" },
+          "2": { type: "string-literal", value: "world" },
+        },
+        booleans: { "1": { type: "boolean-literal", value: true } },
+        records: {},
+      })
+    ).toBe("hello");
+    expect(
+      interpret({
+        result: { type: "string-if", condition: "1", true: "1", false: "2" },
+        numbers: {},
+        strings: {
+          "1": { type: "string-literal", value: "hello" },
+          "2": { type: "string-literal", value: "world" },
+        },
+        booleans: { "1": { type: "boolean-literal", value: false } },
+        records: {},
+      })
+    ).toBe("world");
   });
 });
 
@@ -921,5 +975,58 @@ describe.concurrent("big ASTs", () => {
         },
       })
     ).toBe(true);
+  });
+
+  it.concurrent("works when using an if", () => {
+    expect(
+      interpret({
+        result: { type: "record-if", condition: "1", true: "1", false: "2" },
+        numbers: {},
+        strings: {
+          "1": { type: "string-literal", value: "world" },
+          "2": { type: "string-literal", value: "bar" },
+        },
+        booleans: { "1": { type: "boolean-literal", value: true } },
+        records: {
+          "1": {
+            type: "record-literal",
+            value: {
+              hello: ["string", "1"],
+            },
+          },
+          "2": {
+            type: "record-literal",
+            value: {
+              foo: ["string", "2"],
+            },
+          },
+        },
+      })
+    ).toEqual({ hello: "world" });
+    expect(
+      interpret({
+        result: { type: "record-if", condition: "1", true: "1", false: "2" },
+        numbers: {},
+        strings: {
+          "1": { type: "string-literal", value: "world" },
+          "2": { type: "string-literal", value: "bar" },
+        },
+        booleans: { "1": { type: "boolean-literal", value: false } },
+        records: {
+          "1": {
+            type: "record-literal",
+            value: {
+              hello: ["string", "1"],
+            },
+          },
+          "2": {
+            type: "record-literal",
+            value: {
+              foo: ["string", "2"],
+            },
+          },
+        },
+      })
+    ).toEqual({ foo: "bar" });
   });
 });

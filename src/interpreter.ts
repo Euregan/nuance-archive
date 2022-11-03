@@ -2,9 +2,11 @@ import {
   isNumberExpression,
   isNumberLiteral,
   isNumberUnary,
+  isNumberBinary,
   isNumberRecordAccess,
   isStringExpression,
   isStringLiteral,
+  isStringBinary,
   isStringRecordAccess,
   isBooleanExpression,
   isBooleanLiteral,
@@ -12,6 +14,7 @@ import {
   isBooleanNumberBinary,
   isBooleanStringBinary,
   isBooleanRecordAccess,
+  isRecordLiteral,
 } from "./ast";
 import type {
   AST,
@@ -58,7 +61,7 @@ const interpretNumber = <
   B extends string,
   R extends string
 >(
-  expression: NumberExpression<N, R>,
+  expression: NumberExpression<N, B, R>,
   ast: AST<N, S, B, R>
 ): number => {
   if (isNumberLiteral(expression)) {
@@ -68,11 +71,7 @@ const interpretNumber = <
       case "-":
         return -interpretNumber(ast.numbers[expression.expression], ast);
     }
-  } else if (isNumberRecordAccess(expression)) {
-    return interpretRecord(ast.records[expression.record], ast)[
-      expression.key
-    ] as number;
-  } else {
+  } else if (isNumberBinary(expression)) {
     switch (expression.operator) {
       case "-":
         return (
@@ -95,6 +94,17 @@ const interpretNumber = <
           interpretNumber(ast.numbers[expression.right], ast)
         );
     }
+  } else if (isNumberRecordAccess(expression)) {
+    return interpretRecord(ast.records[expression.record], ast)[
+      expression.key
+    ] as number;
+  } else {
+    return interpretNumber(
+      interpretBoolean(ast.booleans[expression.condition], ast)
+        ? ast.numbers[expression.true]
+        : ast.numbers[expression.false],
+      ast
+    );
   }
 };
 
@@ -104,16 +114,12 @@ const interpretString = <
   B extends string,
   R extends string
 >(
-  expression: StringExpression<S, R>,
+  expression: StringExpression<S, B, R>,
   ast: AST<N, S, B, R>
 ): string => {
   if (isStringLiteral(expression)) {
     return expression.value;
-  } else if (isStringRecordAccess(expression)) {
-    return interpretRecord(ast.records[expression.record], ast)[
-      expression.key
-    ] as string;
-  } else {
+  } else if (isStringBinary(expression)) {
     switch (expression.operator) {
       case "+":
         return (
@@ -121,6 +127,17 @@ const interpretString = <
           interpretString(ast.strings[expression.right], ast)
         );
     }
+  } else if (isStringRecordAccess(expression)) {
+    return interpretRecord(ast.records[expression.record], ast)[
+      expression.key
+    ] as string;
+  } else {
+    return interpretString(
+      interpretBoolean(ast.booleans[expression.condition], ast)
+        ? ast.strings[expression.true]
+        : ast.strings[expression.false],
+      ast
+    );
   }
 };
 
@@ -215,24 +232,33 @@ const interpretRecord = <
   expression: RecordExpression<N, S, B, R>,
   ast: AST<N, S, B, R>
 ): ActualRecord => {
-  const record: ActualRecord = {};
+  if (isRecordLiteral(expression)) {
+    const record: ActualRecord = {};
 
-  Object.entries(expression.value).forEach(([key, value]) => {
-    switch (value[0]) {
-      case "number":
-        record[key] = interpretNumber(ast.numbers[value[1]], ast);
-        break;
-      case "string":
-        record[key] = interpretString(ast.strings[value[1]], ast);
-        break;
-      case "boolean":
-        record[key] = interpretBoolean(ast.booleans[value[1]], ast);
-        break;
-      case "record":
-        record[key] = interpretRecord(ast.records[value[1]], ast);
-        break;
-    }
-  });
+    Object.entries(expression.value).forEach(([key, value]) => {
+      switch (value[0]) {
+        case "number":
+          record[key] = interpretNumber(ast.numbers[value[1]], ast);
+          break;
+        case "string":
+          record[key] = interpretString(ast.strings[value[1]], ast);
+          break;
+        case "boolean":
+          record[key] = interpretBoolean(ast.booleans[value[1]], ast);
+          break;
+        case "record":
+          record[key] = interpretRecord(ast.records[value[1]], ast);
+          break;
+      }
+    });
 
-  return record;
+    return record;
+  } else {
+    return interpretRecord(
+      interpretBoolean(ast.booleans[expression.condition], ast)
+        ? ast.records[expression.true]
+        : ast.records[expression.false],
+      ast
+    );
+  }
 };
