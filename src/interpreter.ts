@@ -4,28 +4,29 @@ import {
   isNumberUnary,
   isNumberBinary,
   isNumberRecordAccess,
+} from "./ast/Number";
+import {
   isStringExpression,
   isStringLiteral,
   isStringBinary,
   isStringRecordAccess,
+} from "./ast/String";
+import {
   isBooleanExpression,
   isBooleanLiteral,
   isBooleanUnary,
   isBooleanNumberBinary,
   isBooleanStringBinary,
   isBooleanRecordAccess,
-  isRecordLiteral,
-} from "./ast";
-import type {
-  AST,
-  Expression,
-  NumberExpression,
-  StringExpression,
-  BooleanExpression,
-  RecordExpression,
-  ActualValue,
-  ActualRecord,
-} from "./ast";
+} from "./ast/Boolean";
+import { isRecordLiteral } from "./ast/Record";
+import type { AST } from "./ast";
+import type { Expression } from "./ast/Expression";
+import type { NumberExpression } from "./ast/Number";
+import type { StringExpression } from "./ast/String";
+import type { BooleanExpression } from "./ast/Boolean";
+import type { RecordExpression, ActualRecord } from "./ast/Record";
+import type { ActualValue } from "./ast/ActualValue";
 
 export const interpret = (ast: AST): ActualValue =>
   interpretExpression<
