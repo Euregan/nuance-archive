@@ -1,6 +1,5 @@
 import * as styles from './Computer.css';
-
-type Type = 'number' | 'string' | 'boolean' | 'record';
+import type { Type } from '../lib/types';
 
 interface Props {
   label: string;
