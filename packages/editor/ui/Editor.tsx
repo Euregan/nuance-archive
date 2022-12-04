@@ -1,11 +1,15 @@
 import { useReducer, useEffect, useRef } from 'react';
 import type { Reducer } from 'react';
 import { v4 as uuid } from 'uuid';
+import type { Expression } from 'interpreter/src/ast/Expression';
 import type { Type } from '../lib/types';
 import { typeToLabel } from '../lib/types';
 import Node from './Node';
 import Output from './Output';
+import NodePicker from './NodePicker';
 import * as styles from './Editor.css';
+
+const GAP = 20;
 
 interface Position {
   x: number;
@@ -17,6 +21,12 @@ interface Size {
   height: number;
 }
 
+type Leaf = Size & Position & Expression<string, string, string, string>;
+
+type Temporary = ({ from: string } | { to: string }) &
+  Position &
+  Size & { type: Type };
+
 interface Graph {
   viewport: Size;
   return:
@@ -25,6 +35,8 @@ interface Graph {
         type: Type;
       } & Position &
         Size);
+  nodes: Array<Leaf>;
+  temporary?: Temporary;
 }
 
 interface ReturnTypeChanged {
@@ -42,15 +54,49 @@ interface NodeSizeChanged {
   payload: { id: string } & Size;
 }
 
-type Action = ViewportSizeUpdated | ReturnTypeChanged | NodeSizeChanged;
+interface LinkCreationStarted {
+  type: 'link-creation-started';
+  payload: (
+    | { from: string; to?: undefined }
+    | { from?: undefined; to: string }
+  ) & { type: Type };
+}
+
+type Action =
+  | ViewportSizeUpdated
+  | ReturnTypeChanged
+  | NodeSizeChanged
+  | LinkCreationStarted;
 
 const position = (graph: Graph): Graph => {
+  const columns = [graph.temporary?.width, graph.return?.width].filter(
+    (x) => x,
+  ) as Array<number>;
+
+  const graphWidth =
+    columns.reduce((total, width) => total + width, 0) +
+    (columns.length - 1) * GAP;
+
+  const graphWidthWithoutLastColumn =
+    columns.slice(0, -1).reduce((total, width) => total + width, 0) +
+    (columns.length - 2) * GAP;
+
   return {
     ...graph,
+    temporary: graph.temporary
+      ? {
+          ...graph.temporary,
+          x: graphWidthWithoutLastColumn,
+          y: graph.viewport.height / 2 - graph.temporary.height / 2,
+        }
+      : undefined,
     return: graph.return
       ? {
           ...graph.return,
-          x: graph.viewport.width / 2 - graph.return.width / 2,
+          x:
+            graph.viewport.width / 2 -
+            graphWidth / 2 +
+            graphWidthWithoutLastColumn,
           y: graph.viewport.height / 2 - graph.return.height / 2,
         }
       : null,
@@ -90,6 +136,30 @@ const reducer: Reducer<Graph, Action> = (state, action): Graph =>
                       : state.return.height,
                 }
               : null,
+            temporary: state.temporary
+              ? {
+                  ...state.temporary,
+                  width:
+                    action.payload.id === 'temporary'
+                      ? action.payload.width
+                      : state.temporary.width,
+                  height:
+                    action.payload.id === 'temporary'
+                      ? action.payload.height
+                      : state.temporary.height,
+                }
+              : undefined,
+          };
+        case 'link-creation-started':
+          return {
+            ...state,
+            temporary: {
+              ...action.payload,
+              width: 0,
+              height: 0,
+              x: 0,
+              y: 0,
+            },
           };
       }
     })(),
@@ -99,6 +169,7 @@ const Editor = () => {
   const [graph, dispatch] = useReducer(reducer, {
     viewport: { width: 0, height: 0 },
     return: null,
+    nodes: [],
   });
 
   const svg = useRef<SVGSVGElement>(null);
@@ -175,8 +246,41 @@ const Editor = () => {
             })
           }
         >
-          <Output type={graph.return.type} onClickInput={console.log} />
+          <Output
+            type={graph.return.type}
+            onClickInput={(type) =>
+              dispatch({
+                type: 'link-creation-started',
+                payload: { to: 'return', type },
+              })
+            }
+          />
         </Node>
+        {graph.temporary && (
+          <Node
+            x={graph.temporary.x}
+            y={graph.temporary.y}
+            id="temporary"
+            onSizeChange={(id, width, height) =>
+              dispatch({
+                type: 'node-size-changed',
+                payload: { id, width, height },
+              })
+            }
+          >
+            <NodePicker
+              filter={
+                'from' in graph.temporary
+                  ? {
+                      input: graph.temporary.type,
+                    }
+                  : {
+                      output: graph.temporary.type,
+                    }
+              }
+            />
+          </Node>
+        )}
       </svg>
     </div>
   );
