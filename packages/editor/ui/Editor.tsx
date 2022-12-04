@@ -1,19 +1,31 @@
 import { useReducer, useEffect, useRef } from 'react';
+import type { AST } from 'interpreter/src/ast';
 import type { Type } from '../lib/types';
 import reducer from '../lib/reducer';
-import { typeToLabel } from '../lib/types';
+import { typeToLabel } from '../lib/helpers';
 import Node from './Node';
 import Output from './Output';
 import NodePicker from './NodePicker';
 import * as styles from './Editor.css';
 
-const Editor = () => {
+interface Props {
+  ast?: AST;
+}
+
+const Editor = ({ ast }: Props) => {
   const [graph, dispatch] = useReducer(reducer, {
     viewport: { width: 0, height: 0 },
-    return: null,
-    nodes: [],
   });
   const svg = useRef<SVGSVGElement>(null);
+
+  useEffect(() => {
+    if (ast) {
+      dispatch({
+        type: 'load-ast',
+        payload: ast,
+      });
+    }
+  }, [JSON.stringify(ast)]);
 
   useEffect(() => {
     if (svg.current) {
@@ -38,12 +50,11 @@ const Editor = () => {
     }
   }, [svg.current?.clientWidth, svg.current?.clientHeight]);
 
-  if (graph.return === null) {
+  if (!('return' in graph)) {
     return (
       <label>
         Select the type of value that your processor will output
         <select
-          value={graph.return || undefined}
           onChange={(event) =>
             dispatch({
               type: 'return-type-changed',

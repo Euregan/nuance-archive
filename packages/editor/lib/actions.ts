@@ -1,3 +1,4 @@
+import type { AST } from 'interpreter/src/ast';
 import type { Type, Size } from './types';
 
 interface ReturnTypeChanged {
@@ -23,8 +24,14 @@ interface LinkCreationStarted {
   ) & { type: Type };
 }
 
+interface LoadAST {
+  type: 'load-ast';
+  payload: AST;
+}
+
 export type Action =
   | ViewportSizeUpdated
   | ReturnTypeChanged
   | NodeSizeChanged
-  | LinkCreationStarted;
+  | LinkCreationStarted
+  | LoadAST;

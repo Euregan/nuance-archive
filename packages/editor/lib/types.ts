@@ -1,15 +1,12 @@
 import type { Expression } from 'interpreter/src/ast/Expression';
+import type { NumberExpression } from 'interpreter/src/ast/Number';
+import type { StringExpression } from 'interpreter/src/ast/String';
+import type { BooleanExpression } from 'interpreter/src/ast/Boolean';
+import type { RecordExpression } from 'interpreter/src/ast/Record';
 
 export type Type = 'number' | 'string' | 'boolean' | 'record';
 
-export const typeToLabel: Record<Type, string> = {
-  number: 'Number',
-  string: 'Text',
-  boolean: 'True/False',
-  record: 'Data',
-};
-
-interface Position {
+export interface Position {
   x: number;
   y: number;
 }
@@ -19,20 +16,45 @@ export interface Size {
   height: number;
 }
 
-type Leaf = Size & Position & Expression<string, string, string, string>;
-
 type Temporary = ({ from: string } | { to: string }) &
   Position &
   Size & { type: Type };
 
-export interface Graph {
+export interface Nodes {
+  result: Expression<string, string, string, string> & Size & Position;
+  numbers: Record<
+    string,
+    NumberExpression<string, string, string> & Size & Position
+  >;
+  strings: Record<
+    string,
+    StringExpression<string, string, string> & Size & Position
+  >;
+  booleans: Record<
+    string,
+    BooleanExpression<string, string, string, string> & Size & Position
+  >;
+  records: Record<
+    string,
+    RecordExpression<string, string, string, string> & Size & Position
+  >;
+}
+
+interface Return extends Position, Size {
+  type: Type;
+}
+
+interface InitialGraph {
   viewport: Size;
-  return:
-    | null
-    | ({
-        type: Type;
-      } & Position &
-        Size);
-  nodes: Array<Leaf>;
+}
+
+interface GraphWithReturn extends InitialGraph {
+  return: Return;
   temporary?: Temporary;
 }
+
+interface GraphWithNodes extends GraphWithReturn {
+  nodes: Nodes;
+}
+
+export type Graph = InitialGraph | GraphWithReturn | GraphWithNodes;

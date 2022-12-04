@@ -2,6 +2,7 @@ import type { Reducer } from 'react';
 import type { Graph } from './types';
 import type { Action } from './actions';
 import position from './position';
+import { astToType, astToNodes, initSizeAndPosition } from './helpers';
 
 const reducer: Reducer<Graph, Action> = (state, action): Graph =>
   position(
@@ -21,10 +22,10 @@ const reducer: Reducer<Graph, Action> = (state, action): Graph =>
             },
           };
         case 'node-size-changed':
-          return {
-            ...state,
-            return: state.return
-              ? {
+          return 'return' in state
+            ? {
+                ...state,
+                return: {
                   ...state.return,
                   width:
                     action.payload.id === 'return'
@@ -34,22 +35,22 @@ const reducer: Reducer<Graph, Action> = (state, action): Graph =>
                     action.payload.id === 'return'
                       ? action.payload.height
                       : state.return.height,
-                }
-              : null,
-            temporary: state.temporary
-              ? {
-                  ...state.temporary,
-                  width:
-                    action.payload.id === 'temporary'
-                      ? action.payload.width
-                      : state.temporary.width,
-                  height:
-                    action.payload.id === 'temporary'
-                      ? action.payload.height
-                      : state.temporary.height,
-                }
-              : undefined,
-          };
+                },
+                temporary: state.temporary
+                  ? {
+                      ...state.temporary,
+                      width:
+                        action.payload.id === 'temporary'
+                          ? action.payload.width
+                          : state.temporary.width,
+                      height:
+                        action.payload.id === 'temporary'
+                          ? action.payload.height
+                          : state.temporary.height,
+                    }
+                  : undefined,
+              }
+            : { ...state };
         case 'link-creation-started':
           return {
             ...state,
@@ -60,6 +61,13 @@ const reducer: Reducer<Graph, Action> = (state, action): Graph =>
               x: 0,
               y: 0,
             },
+          };
+        case 'load-ast':
+          return {
+            ...state,
+            return: initSizeAndPosition({ type: astToType(action.payload) }),
+            nodes: astToNodes(action.payload),
+            temporary: undefined,
           };
       }
     })(),
