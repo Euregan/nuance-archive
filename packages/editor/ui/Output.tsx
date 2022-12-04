@@ -1,6 +1,6 @@
 import * as styles from './Output.css';
 import type { Type } from '../lib/types';
-import { typeToLabel } from '../lib/types';
+import { typeToLabel } from '../lib/helpers';
 
 interface Props {
   type: Type;

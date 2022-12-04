@@ -133,6 +133,87 @@ const Editor = ({ ast }: Props) => {
             />
           </Node>
         )}
+        {'nodes' in graph && (
+          <>
+            <Node
+              x={graph.nodes.result.x}
+              y={graph.nodes.result.y}
+              id="result"
+              onSizeChange={(id, width, height) => {
+                dispatch({
+                  type: 'node-size-changed',
+                  payload: { id, width, height },
+                });
+              }}
+            >
+              {graph.nodes.result.type}
+            </Node>
+            {Object.entries(graph.nodes.numbers).map(([id, node]) => (
+              <Node
+                key={id}
+                x={node.x}
+                y={node.y}
+                id={`numbers.${id}`}
+                onSizeChange={(id, width, height) => {
+                  dispatch({
+                    type: 'node-size-changed',
+                    payload: { id, width, height },
+                  });
+                }}
+              >
+                {node.type}
+              </Node>
+            ))}
+            {Object.entries(graph.nodes.strings).map(([id, node]) => (
+              <Node
+                key={id}
+                x={node.x}
+                y={node.y}
+                id={`strings.${id}`}
+                onSizeChange={(id, width, height) => {
+                  dispatch({
+                    type: 'node-size-changed',
+                    payload: { id, width, height },
+                  });
+                }}
+              >
+                {node.type}
+              </Node>
+            ))}
+            {Object.entries(graph.nodes.booleans).map(([id, node]) => (
+              <Node
+                key={id}
+                x={node.x}
+                y={node.y}
+                id={`booleans.${id}`}
+                onSizeChange={(id, width, height) => {
+                  dispatch({
+                    type: 'node-size-changed',
+                    payload: { id, width, height },
+                  });
+                }}
+              >
+                {node.type}
+              </Node>
+            ))}
+            {Object.entries(graph.nodes.records).map(([id, node]) => (
+              <Node
+                key={id}
+                x={node.x}
+                y={node.y}
+                id={`records.${id}`}
+                onSizeChange={(id, width, height) => {
+                  dispatch({
+                    type: 'node-size-changed',
+                    payload: { id, width, height },
+                  });
+                }}
+              >
+                {node.type}
+              </Node>
+            ))}
+          </>
+        )}
       </svg>
     </div>
   );

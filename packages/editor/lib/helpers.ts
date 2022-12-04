@@ -45,11 +45,14 @@ export const astToNodes = (ast: AST): Nodes => ({
 interface Dictionary<T> {
   [key: string]: T;
 }
-function map<In, Out>(object: Dictionary<In>, fun: (val: In) => Out) {
+export function map<In, Out>(
+  object: Dictionary<In>,
+  fun: (value: In, key: keyof typeof object) => Out,
+) {
   const result = {} as Dictionary<Out>;
 
   for (const key of Object.keys(object)) {
-    result[key] = fun(object[key]);
+    result[key] = fun(object[key], key);
   }
 
   return result;
